@@ -1,0 +1,35 @@
+{% extends 'booking/base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-bold mb-6">Edit Booking</h2>
+    
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        
+        <div class="bg-gray-50 p-4 rounded">
+            <p><strong>Net:</strong> {{ booking.cricket_net.name }}</p>
+            <p><strong>Date:</strong> {{ booking.booking_date }}</p>
+            <p><strong>Time:</strong> {{ booking.start_time }} - {{ booking.end_time }}</p>
+            <p><strong>Total Amount:</strong> ${{ booking.payment_amount }}</p>
+            <p><strong>Advance Paid:</strong> ${{ booking.advance_payment }} ({{ booking.advance_payment_method }})</p>
+            <p><strong>Balance:</strong> ${{ booking.payment_amount|sub:booking.advance_payment }}</p>
+        </div>
+
+        <div class="flex items-center">
+            <input type="checkbox" name="payment_status" id="payment_status" {% if booking.payment_status %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+            <label for="payment_status" class="ml-2 block text-sm text-gray-900">Payment Received</label>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Note</label>
+            <textarea name="note" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ booking.note }}</textarea>
+        </div>
+
+        <div class="flex justify-end space-x-4">
+            <a href="{% url 'booking_list' %}" class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200">Cancel</a>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Booking</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

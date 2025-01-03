@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold">My Bookings</h2>
+        <a href="{% url 'create_booking' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">New Booking</a>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-6 py-3 text-left">Net</th>
+                    <th class="px-6 py-3 text-left">Date</th>
+                    <th class="px-6 py-3 text-left">Time</th>
+                    <th class="px-6 py-3 text-left">Payment</th>
+                    <th class="px-6 py-3 text-left">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for booking in bookings %}
+                <tr>
+                    <td class="px-6 py-4">{{ booking.cricket_net.name }}</td>
+                    <td class="px-6 py-4">{{ booking.booking_date }}</td>
+                    <td class="px-6 py-4">{{ booking.start_time }} - {{ booking.end_time }}</td>
+                    <td class="px-6 py-4">
+                        {% if booking.payment_status %}
+                            <span class="text-green-600">Paid ({{ booking.payment_method }})</span>
+                        {% else %}
+                            <span class="text-red-600">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">{{ booking.status }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

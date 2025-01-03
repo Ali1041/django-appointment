@@ -1,6 +1,0 @@
-{
-    "schemaVersion": 1,
-    "label": "compatible with django",
-    "message": "3.2 | 4.0 | 4.1 | 4.2 | 5.0",
-    "color": "blue"
-  }
