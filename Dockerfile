@@ -8,7 +8,7 @@ COPY . /app
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-
+EXPOSE 8000
 # Conditionally install django-q2
 ARG USE_DJANGO_Q=False
 RUN if [ "$USE_DJANGO_Q" = True ] ; then pip install django-q2 ; fi
