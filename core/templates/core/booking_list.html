@@ -1,3 +1,4 @@
+<!-- templates/booking/booking_list.html -->
 {% extends 'core/base.html' %}
 
 {% block content %}
@@ -14,8 +15,11 @@
                     <th class="px-6 py-3 text-left">Net</th>
                     <th class="px-6 py-3 text-left">Date</th>
                     <th class="px-6 py-3 text-left">Time</th>
-                    <th class="px-6 py-3 text-left">Payment</th>
+                    <th class="px-6 py-3 text-left">Total Amount</th>
+                    <th class="px-6 py-3 text-left">Advance</th>
+                    <th class="px-6 py-3 text-left">Payment Status</th>
                     <th class="px-6 py-3 text-left">Status</th>
+                    <th class="px-6 py-3 text-left">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -24,18 +28,30 @@
                     <td class="px-6 py-4">{{ booking.cricket_net.name }}</td>
                     <td class="px-6 py-4">{{ booking.booking_date }}</td>
                     <td class="px-6 py-4">{{ booking.start_time }} - {{ booking.end_time }}</td>
+                    <td class="px-6 py-4">${{ booking.payment_amount }}</td>
+                    <td class="px-6 py-4">${{ booking.advance_payment }}</td>
                     <td class="px-6 py-4">
                         {% if booking.payment_status %}
-                            <span class="text-green-600">Paid ({{ booking.payment_method }})</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Paid</span>
                         {% else %}
-                            <span class="text-red-600">Pending</span>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Pending</span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4">{{ booking.status }}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 {% if booking.status == 'CONFIRMED' %}bg-green-100 text-green-800{% elif booking.status == 'PENDING' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %} rounded-full text-sm">
+                            {{ booking.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <a href="{% url 'edit_booking' booking.id %}" 
+                           class="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded">
+                            Edit
+                        </a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
                 </tr>
                 {% endfor %}
             </tbody>

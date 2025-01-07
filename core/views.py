@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, time, date
 from django.utils import timezone
 from decimal import Decimal
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import user_passes_test
 
 
 def is_admin(user):
@@ -75,18 +76,16 @@ def create_booking(request):
                 payment_method=payment_method,
                 payment_amount=payment_amount,
                 advance_payment=advance_payment,
-                advance_payment_method=advance_payment_method,
+                advance_payment_method=(
+                    advance_payment_method if advance_payment > 0 else ""
+                ),
                 note=note,
-                payment_status=(
-                    False
-                    if Decimal(advance_payment) < Decimal(payment_amount)
-                    else True
-                ),
+                payment_status=advance_payment
+                >= payment_amount,  # Only true if full payment
                 payment_date=(
-                    timezone.now()
-                    if Decimal(advance_payment) == Decimal(payment_amount)
-                    else None
+                    timezone.now() if advance_payment >= payment_amount else None
                 ),
+                status="CONFIRMED" if advance_payment > 0 else "PENDING",
             )
 
             messages.success(request, "Booking created successfully!")
@@ -100,24 +99,50 @@ def create_booking(request):
     return render(request, "core/create_booking.html", {"cricket_nets": cricket_nets})
 
 
-@login_required
+@admin_required
 def edit_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
 
     if request.method == "POST":
-        payment_status = request.POST.get("payment_status") == "on"
-        note = request.POST.get("note", "")
+        try:
+            payment_status = request.POST.get("payment_status") == "on"
+            note = request.POST.get("note", "")
+            remaining_payment = float(request.POST.get("remaining_payment", 0))
+            payment_method = request.POST.get("payment_method")
 
-        booking.payment_status = payment_status
-        booking.note = note
-        if payment_status and not booking.payment_date:
-            booking.payment_date = timezone.now()
-        booking.save()
+            if remaining_payment > (booking.payment_amount - booking.advance_payment):
+                raise ValueError("Payment amount exceeds remaining balance")
 
-        messages.success(request, "Booking updated successfully!")
-        return redirect("booking_list")
+            if (
+                payment_status
+                and (booking.advance_payment + remaining_payment)
+                < booking.payment_amount
+            ):
+                raise ValueError("Total payments do not match booking amount")
 
-    return render(request, "core/edit_booking.html", {"booking": booking})
+            booking.payment_status = payment_status
+            booking.note = note
+
+            # Status remains CONFIRMED if there was any advance payment
+            if payment_status:
+                booking.payment_date = timezone.now()
+                if (
+                    not booking.status == "CONFIRMED"
+                ):  # Only update if not already confirmed
+                    booking.status = "CONFIRMED"
+                booking.payment_method = payment_method
+
+            booking.save()
+
+            messages.success(request, "Booking updated successfully!")
+            return redirect("booking_list")
+
+        except ValueError as e:
+            messages.error(request, str(e))
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+
+    return render(request, "booking/edit_booking.html", {"booking": booking})
 
 
 def is_peak_hour(current_time):
