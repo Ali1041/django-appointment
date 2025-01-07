@@ -7,6 +7,7 @@ from django.utils import timezone
 from decimal import Decimal
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import user_passes_test
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 def is_admin(user):
@@ -44,28 +45,67 @@ def admin_required(view_func):
 
 @login_required
 def booking_list(request):
-    bookings = Booking.objects.filter(user=request.user).order_by("-booking_date")
-    return render(request, "core/booking_list.html", {"bookings": bookings})
+    booking_list = Booking.objects.filter(user=request.user).order_by(
+        "-booking_date", "-start_time"
+    )
+
+    # Number of bookings per page
+    per_page = 10
+    paginator = Paginator(booking_list, per_page)
+    page = request.GET.get("page", 1)
+
+    try:
+        bookings = paginator.page(page)
+    except PageNotAnInteger:
+        bookings = paginator.page(1)
+    except EmptyPage:
+        bookings = paginator.page(paginator.num_pages)
+
+    return render(
+        request,
+        "core/booking_list.html",
+        {
+            "bookings": bookings,
+            "total_bookings": booking_list.count(),
+        },
+    )
 
 
-@login_required
+@admin_required
 def create_booking(request):
     if request.method == "POST":
-        net_id = request.POST.get("cricket_net")
-        date = request.POST.get("date")
-        start_time = request.POST.get("start_time")
-        end_time = request.POST.get("end_time")
-        payment_method = request.POST.get("payment_method")
-        advance_payment = request.POST.get("advance_payment", 0)
-        advance_payment_method = request.POST.get("advance_payment_method")
-        note = request.POST.get("note", "")
-
         try:
+            net_id = request.POST.get("cricket_net")
+            date = request.POST.get("date")
+            start_time = request.POST.get("start_time")
+            end_time = request.POST.get("end_time")
+            payment_method = request.POST.get("payment_method")
+            # Convert to Decimal instead of float for monetary calculations
+            advance_payment = Decimal(request.POST.get("advance_payment", "0"))
+            advance_payment_method = request.POST.get("advance_payment_method")
+            note = request.POST.get("note", "")
+
             cricket_net = CricketNet.objects.get(id=net_id)
 
-            # Existing booking check logic...
+            # Check for existing bookings
+            existing_booking = Booking.objects.filter(
+                cricket_net=cricket_net,
+                booking_date=date,
+                start_time__lt=end_time,
+                end_time__gt=start_time,
+            ).exists()
+
+            if existing_booking:
+                raise ValueError("This time slot is already booked.")
 
             payment_amount = calculate_payment_amount(cricket_net, start_time, end_time)
+
+            # Convert payment_amount to Decimal if it isn't already
+            if not isinstance(payment_amount, Decimal):
+                payment_amount = Decimal(str(payment_amount))
+
+            if advance_payment > payment_amount:
+                raise ValueError("Advance payment cannot exceed total amount")
 
             booking = Booking.objects.create(
                 cricket_net=cricket_net,
@@ -80,8 +120,7 @@ def create_booking(request):
                     advance_payment_method if advance_payment > 0 else ""
                 ),
                 note=note,
-                payment_status=advance_payment
-                >= payment_amount,  # Only true if full payment
+                payment_status=advance_payment >= payment_amount,
                 payment_date=(
                     timezone.now() if advance_payment >= payment_amount else None
                 ),
@@ -91,12 +130,18 @@ def create_booking(request):
             messages.success(request, "Booking created successfully!")
             return redirect("booking_list")
 
-        except Exception as e:
+        except ValueError as e:
             messages.error(request, str(e))
-            return redirect("create_booking")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+        return redirect("create_booking")
 
     cricket_nets = CricketNet.objects.filter(is_active=True)
-    return render(request, "core/create_booking.html", {"cricket_nets": cricket_nets})
+    return render(
+        request,
+        "core/create_booking.html",
+        {"cricket_nets": cricket_nets},
+    )
 
 
 @admin_required
@@ -106,8 +151,7 @@ def edit_booking(request, booking_id):
     if request.method == "POST":
         try:
             payment_status = request.POST.get("payment_status") == "on"
-            note = request.POST.get("note", "")
-            remaining_payment = float(request.POST.get("remaining_payment", 0))
+            remaining_payment = Decimal(request.POST.get("remaining_payment", 0))
             payment_method = request.POST.get("payment_method")
 
             if remaining_payment > (booking.payment_amount - booking.advance_payment):
@@ -121,14 +165,11 @@ def edit_booking(request, booking_id):
                 raise ValueError("Total payments do not match booking amount")
 
             booking.payment_status = payment_status
-            booking.note = note
 
             # Status remains CONFIRMED if there was any advance payment
             if payment_status:
                 booking.payment_date = timezone.now()
-                if (
-                    not booking.status == "CONFIRMED"
-                ):  # Only update if not already confirmed
+                if not booking.status == "CONFIRMED":
                     booking.status = "CONFIRMED"
                 booking.payment_method = payment_method
 
@@ -142,7 +183,7 @@ def edit_booking(request, booking_id):
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
 
-    return render(request, "booking/edit_booking.html", {"booking": booking})
+    return render(request, "core/edit_booking.html", {"booking": booking})
 
 
 def is_peak_hour(current_time):
@@ -177,7 +218,8 @@ def calculate_payment_amount(cricket_net, start_time, end_time):
 
         # Calculate peak and regular hours
         peak_minutes = 0
-        total_minutes = int(duration.total_seconds() / 60)  # Changed to int
+        # Convert to integer for range()
+        total_minutes = int(duration.total_seconds() / 60)
         current_time = start_time
 
         for _ in range(total_minutes):
@@ -189,15 +231,15 @@ def calculate_payment_amount(cricket_net, start_time, end_time):
             if current_time == time(0, 0):  # Handle midnight wraparound
                 current_time = time(0, 1)
 
-        # Convert to Decimal for consistent calculations
-        peak_hours = Decimal(peak_minutes) / Decimal("60")
-        regular_hours = Decimal(total_minutes - peak_minutes) / Decimal("60")
+        # Convert to Decimal for final calculations
+        peak_hours = Decimal(str(peak_minutes / 60))
+        regular_hours = Decimal(str((total_minutes - peak_minutes) / 60))
 
         # Calculate total amount
         amount = (peak_hours * cricket_net.peak_hour_rate) + (
             regular_hours * cricket_net.hourly_rate
         )
-        return round(amount, 2)
+        return Decimal(str(round(float(amount), 2)))
 
     except ValueError as e:
         raise e
