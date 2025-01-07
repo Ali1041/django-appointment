@@ -152,7 +152,7 @@ def calculate_payment_amount(cricket_net, start_time, end_time):
 
         # Calculate peak and regular hours
         peak_minutes = 0
-        total_minutes = int(duration.total_seconds() / 60)
+        total_minutes = int(duration.total_seconds() / 60)  # Changed to int
         current_time = start_time
 
         for _ in range(total_minutes):
@@ -164,8 +164,9 @@ def calculate_payment_amount(cricket_net, start_time, end_time):
             if current_time == time(0, 0):  # Handle midnight wraparound
                 current_time = time(0, 1)
 
-        peak_hours = peak_minutes / 60
-        regular_hours = (total_minutes - peak_minutes) / 60
+        # Convert to Decimal for consistent calculations
+        peak_hours = Decimal(peak_minutes) / Decimal("60")
+        regular_hours = Decimal(total_minutes - peak_minutes) / Decimal("60")
 
         # Calculate total amount
         amount = (peak_hours * cricket_net.peak_hour_rate) + (
