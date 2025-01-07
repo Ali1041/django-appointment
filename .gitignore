@@ -275,3 +275,5 @@ app/media/
 # Ignore the others directory and its contents
 others/
 others/*
+db.*
+db.sqlite3
