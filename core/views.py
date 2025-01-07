@@ -5,6 +5,40 @@ from .models import CricketNet, Booking
 from datetime import datetime, timedelta, time, date
 from django.utils import timezone
 from decimal import Decimal
+from django.contrib.auth import authenticate, login, logout
+
+
+def is_admin(user):
+    return user.is_staff
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect("booking_list")
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None and user.is_staff:
+            login(request, user)
+            return redirect("booking_list")
+        else:
+            messages.error(request, "Invalid credentials or insufficient permissions.")
+
+    return render(request, "core/login.html")
+
+
+def logout_view(request):
+    logout(request)
+    return redirect("login")
+
+
+# Modify your existing views to use this decorator
+def admin_required(view_func):
+    decorated_view = user_passes_test(is_admin, login_url="login")(view_func)
+    return decorated_view
 
 
 @login_required
