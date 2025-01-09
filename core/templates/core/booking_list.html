@@ -22,18 +22,6 @@
         </div>
         
         <div>
-            <label for="day" class="block text-sm font-medium text-gray-700">Day</label>
-            <select name="day" id="day" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                <option value="">All Days</option>
-                {% for day_value, day_name in day_choices %}
-                <option value="{{ day_value }}" {% if selected_day|stringformat:"s" == day_value|stringformat:"s" %}selected{% endif %}>
-                    {{ day_name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div>
             <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
             <input type="date" name="date" id="date" value="{{ selected_date|default:'' }}"
                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -51,29 +39,103 @@
         </div>
     </form>
 
-    <!-- Rest of the existing table code remains the same -->
+    <!-- Booking Table -->
     <div class="overflow-x-auto">
-        <!-- Your existing table code -->
+        <table class="w-full">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-6 py-3 text-left">Net</th>
+                    <th class="px-6 py-3 text-left">Date</th>
+                    <th class="px-6 py-3 text-left">Time</th>
+                    <th class="px-6 py-3 text-left">Total Amount</th>
+                    <th class="px-6 py-3 text-left">Advance</th>
+                    <th class="px-6 py-3 text-left">Payment Status</th>
+                    <th class="px-6 py-3 text-left">Status</th>
+                    <th class="px-6 py-3 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for booking in bookings %}
+                <tr>
+                    <td class="px-6 py-4">{{ booking.cricket_net.name }}</td>
+                    <td class="px-6 py-4">{{ booking.booking_date }}</td>
+                    <td class="px-6 py-4">{{ booking.start_time }} - {{ booking.end_time }}</td>
+                    <td class="px-6 py-4">${{ booking.payment_amount }}</td>
+                    <td class="px-6 py-4">${{ booking.advance_payment }}</td>
+                    <td class="px-6 py-4">
+                        {% if booking.payment_status %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Paid</span>
+                        {% else %}
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 {% if booking.status == 'CONFIRMED' %}bg-green-100 text-green-800{% elif booking.status == 'PENDING' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %} rounded-full text-sm">
+                            {{ booking.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <a href="{% url 'edit_booking' booking.id %}" 
+                           class="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded">
+                            Edit
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <!-- Modify pagination links to preserve filters -->
+    <!-- Pagination with preserved filters -->
     {% if bookings.paginator.num_pages > 1 %}
     <div class="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <div class="flex flex-1 justify-between sm:hidden">
             {% if bookings.has_previous %}
-            <a href="?page={{ bookings.previous_page_number }}{% if selected_pitch %}&pitch={{ selected_pitch }}{% endif %}{% if selected_day %}&day={{ selected_day }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}" 
+            <a href="?page={{ bookings.previous_page_number }}{% if selected_pitch %}&pitch={{ selected_pitch }}{% endif %}{% if selected_time %}&time={{ selected_time }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}" 
                class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Previous
             </a>
             {% endif %}
             {% if bookings.has_next %}
-            <a href="?page={{ bookings.next_page_number }}{% if selected_pitch %}&pitch={{ selected_pitch }}{% endif %}{% if selected_day %}&day={{ selected_day }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}" 
+            <a href="?page={{ bookings.next_page_number }}{% if selected_pitch %}&pitch={{ selected_pitch }}{% endif %}{% if selected_time %}&time={{ selected_time }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}" 
                class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Next
             </a>
             {% endif %}
         </div>
-        <!-- Rest of the pagination code remains the same -->
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing 
+                    <span class="font-medium">{{ bookings.start_index }}</span>
+                    to
+                    <span class="font-medium">{{ bookings.end_index }}</span>
+                    of
+                    <span class="font-medium">{{ total_bookings }}</span>
+                    results
+                </p>
+            </div>
+            <div>
+                <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    {% for i in bookings.paginator.page_range %}
+                        {% if bookings.number == i %}
+                        <span class="relative z-10 inline-flex items-center bg-blue-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                            {{ i }}
+                        </span>
+                        {% else %}
+                        <a href="?page={{ i }}{% if selected_pitch %}&pitch={{ selected_pitch }}{% endif %}{% if selected_time %}&time={{ selected_time }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}" 
+                           class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                            {{ i }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                </nav>
+            </div>
+        </div>
     </div>
     {% endif %}
 </div>

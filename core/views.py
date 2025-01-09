@@ -47,18 +47,15 @@ def admin_required(view_func):
 def booking_list(request):
     # Get filter parameters from request
     pitch = request.GET.get("pitch")
-    day = request.GET.get("day")
+    time_slot = request.GET.get("time")
     date = request.GET.get("date")
 
-    # Start with base queryset
-    booking_list = Booking.objects.filter(user=request.user)
+    # Start with base queryset - show all bookings by default
+    booking_list = Booking.objects.all()
 
     # Apply filters if they exist
     if pitch:
         booking_list = booking_list.filter(cricket_net_id=pitch)
-
-    if day:
-        booking_list = booking_list.filter(booking_date__week_day=day)
 
     if date:
         try:
@@ -85,28 +82,15 @@ def booking_list(request):
     except EmptyPage:
         bookings = paginator.page(paginator.num_pages)
 
-    # Day choices for the filter
-    day_choices = [
-        (1, "Sunday"),
-        (2, "Monday"),
-        (3, "Tuesday"),
-        (4, "Wednesday"),
-        (5, "Thursday"),
-        (6, "Friday"),
-        (7, "Saturday"),
-    ]
-
     context = {
         "bookings": bookings,
         "total_bookings": booking_list.count(),
         "cricket_nets": cricket_nets,
-        "day_choices": day_choices,
         "selected_pitch": pitch,
-        "selected_day": day,
         "selected_date": date,
     }
 
-    return render(request, "core/booking_list.html", context)
+    return render(request, "booking/booking_list.html", context)
 
 
 @admin_required
