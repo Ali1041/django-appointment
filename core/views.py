@@ -51,7 +51,7 @@ def booking_list(request):
     date = request.GET.get("date")
 
     # Start with base queryset - show all bookings by default
-    booking_list = Booking.objects.all()
+    booking_list = Booking.objects.select_related("cricket_net", "user").all()
 
     # Apply filters if they exist
     if pitch:
