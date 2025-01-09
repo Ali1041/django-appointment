@@ -45,9 +45,33 @@ def admin_required(view_func):
 
 @login_required
 def booking_list(request):
-    booking_list = Booking.objects.filter(user=request.user).order_by(
-        "-booking_date", "-start_time"
-    )
+    # Get filter parameters from request
+    pitch = request.GET.get("pitch")
+    day = request.GET.get("day")
+    date = request.GET.get("date")
+
+    # Start with base queryset
+    booking_list = Booking.objects.filter(user=request.user)
+
+    # Apply filters if they exist
+    if pitch:
+        booking_list = booking_list.filter(cricket_net_id=pitch)
+
+    if day:
+        booking_list = booking_list.filter(booking_date__week_day=day)
+
+    if date:
+        try:
+            filter_date = datetime.strptime(date, "%Y-%m-%d").date()
+            booking_list = booking_list.filter(booking_date=filter_date)
+        except (ValueError, TypeError):
+            pass  # Invalid date format, ignore the filter
+
+    # Apply final ordering
+    booking_list = booking_list.order_by("-booking_date", "-start_time")
+
+    # Get all cricket nets for the filter dropdown
+    cricket_nets = CricketNet.objects.all()
 
     # Number of bookings per page
     per_page = 10
@@ -61,14 +85,28 @@ def booking_list(request):
     except EmptyPage:
         bookings = paginator.page(paginator.num_pages)
 
-    return render(
-        request,
-        "core/booking_list.html",
-        {
-            "bookings": bookings,
-            "total_bookings": booking_list.count(),
-        },
-    )
+    # Day choices for the filter
+    day_choices = [
+        (1, "Sunday"),
+        (2, "Monday"),
+        (3, "Tuesday"),
+        (4, "Wednesday"),
+        (5, "Thursday"),
+        (6, "Friday"),
+        (7, "Saturday"),
+    ]
+
+    context = {
+        "bookings": bookings,
+        "total_bookings": booking_list.count(),
+        "cricket_nets": cricket_nets,
+        "day_choices": day_choices,
+        "selected_pitch": pitch,
+        "selected_day": day,
+        "selected_date": date,
+    }
+
+    return render(request, "core/booking_list.html", context)
 
 
 @admin_required
