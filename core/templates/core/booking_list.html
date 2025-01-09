@@ -56,7 +56,7 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
                 {% for booking in bookings %}
-                <tr>
+                <tr class="cursor-pointer hover:bg-gray-50" onclick="showBookingDetails('{{ booking.id }}')">
                     <td class="px-6 py-4">{{ booking.cricket_net.name }}</td>
                     <td class="px-6 py-4">{{ booking.booking_date }}</td>
                     <td class="px-6 py-4">{{ booking.start_time }} - {{ booking.end_time }}</td>
@@ -139,4 +139,124 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Booking Details Modal -->
+<div id="bookingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full" onclick="closeModal()">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-lg bg-white" 
+         onclick="event.stopPropagation();">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-900">Booking Details</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="bookingDetails" class="space-y-4">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+function showBookingDetails(bookingId) {
+// Find the booking data from the table
+const bookings = {
+    {% for booking in bookings %}
+    "{{ booking.id }}": {
+        "net": "{{ booking.cricket_net.name }}",
+        "date": "{{ booking.booking_date }}",
+        "time": "{{ booking.start_time }} - {{ booking.end_time }}",
+        "created": "{{ booking.created_at }}",
+        "payment_method": "{{ booking.get_payment_method_display }}",
+        "payment_status": "{{ booking.payment_status|yesno:'Paid,Pending' }}",
+        "payment_amount": "{{ booking.payment_amount }}",
+        "payment_date": "{{ booking.payment_date|default:'Not paid' }}",
+        "status": "{{ booking.get_status_display }}",
+        "note": "{{ booking.note|default:'No notes' }}",
+        "advance_payment": "{{ booking.advance_payment }}",
+        "advance_payment_method": "{{ booking.get_advance_payment_method_display }}",
+        "user": "{{ booking.user.get_full_name|default:booking.user.username }}"
+    },
+    {% endfor %}
+};
+
+const booking = bookings[bookingId];
+if (!booking) return;
+
+// Create the content HTML
+const content = `
+    <div class="grid grid-cols-2 gap-4 text-sm">
+        <div class="space-y-4">
+            <div>
+                <h4 class="font-semibold text-gray-500">Booking Information</h4>
+                <div class="mt-2 space-y-2">
+                    <p><span class="font-medium">Cricket Net:</span> ${booking.net}</p>
+                    <p><span class="font-medium">Date:</span> ${booking.date}</p>
+                    <p><span class="font-medium">Time:</span> ${booking.time}</p>
+                    <p><span class="font-medium">Booked By:</span> ${booking.user}</p>
+                    <p><span class="font-medium">Created:</span> ${booking.created}</p>
+                    <p><span class="font-medium">Status:</span> 
+                        <span class="px-2 py-1 rounded-full text-sm 
+                            ${booking.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 
+                              booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                              'bg-red-100 text-red-800'}">
+                            ${booking.status}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="font-semibold text-gray-500">Notes</h4>
+                <p class="mt-2">${booking.note}</p>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <h4 class="font-semibold text-gray-500">Payment Details</h4>
+                <div class="mt-2 space-y-2">
+                    <p><span class="font-medium">Total Amount:</span> $${booking.payment_amount}</p>
+                    <p><span class="font-medium">Payment Status:</span> 
+                        <span class="px-2 py-1 rounded-full text-sm 
+                            ${booking.payment_status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                            ${booking.payment_status}
+                        </span>
+                    </p>
+                    <p><span class="font-medium">Payment Method:</span> ${booking.payment_method}</p>
+                    <p><span class="font-medium">Payment Date:</span> ${booking.payment_date}</p>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="font-semibold text-gray-500">Advance Payment</h4>
+                <div class="mt-2 space-y-2">
+                    <p><span class="font-medium">Amount:</span> $${booking.advance_payment}</p>
+                    <p><span class="font-medium">Method:</span> ${booking.advance_payment_method || 'N/A'}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+
+// Update the modal content and show it
+document.getElementById('bookingDetails').innerHTML = content;
+document.getElementById('bookingModal').classList.remove('hidden');
+}
+
+function closeModal() {
+document.getElementById('bookingModal').classList.add('hidden');
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(event) {
+if (event.key === 'Escape') {
+    closeModal();
+}
+});
+</script>
+
 {% endblock %}
