@@ -90,7 +90,7 @@ def booking_list(request):
         "selected_date": date,
     }
 
-    return render(request, "booking/booking_list.html", context)
+    return render(request, "core/booking_list.html", context)
 
 
 @admin_required
