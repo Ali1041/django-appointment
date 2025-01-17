@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import CricketNet, Booking
+from .models import CricketNet, Booking, Blogs
 from datetime import datetime, timedelta, time, date
 from django.utils import timezone
 from decimal import Decimal
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import user_passes_test
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import JsonResponse
 
 
 def is_admin(user):
@@ -268,3 +269,24 @@ def calculate_payment_amount(cricket_net, start_time, end_time):
     except Exception as e:
         print(e)
         raise ValueError(f"Error calculating payment amount: {str(e)}")
+
+
+def get_blogs(request):
+    blogs = Blogs.objects.filter(status="published")
+    per_page = 9
+    paginator = Paginator(booking_list, per_page)
+    page = request.GET.get("page", 1)
+
+    try:
+        blogs = paginator.page(page)
+    except PageNotAnInteger:
+        blogs = paginator.page(1)
+    except EmptyPage:
+        blogs = paginator.page(paginator.num_pages)
+
+    return JsonResponse({"blogs": blogs})
+
+
+def get_blog_detail(request, blog_id):
+    blog = get_object_or_404(Blogs, id=blog_id)
+    return JsonResponse({"blog": blog})
