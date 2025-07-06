@@ -108,19 +108,31 @@ def process_booking(data):
     note = f"Name: {parsed.get('name', '')}, Phone: {parsed.get('phone', '')}"
 
     date_str = datetime.now().strftime("%d/%m/%Y")
+    parsed['note'] = note
+    parsed['date_str'] = date_str
+    parsed['time_slot'] = time_slot
+    parsed['total_amount'] = total_amount
+    
+    add_booking_to_sheet(parsed)
+    return parsed
+
+
+def add_booking_to_sheet(data):
     sheet.append_row([
-        date_str,
-        time_slot,
-        rate_per_hour,
-        0,  # Advance
-        0,  # Cash Recived
-        0,  # Bottles amount
+        data.get("date_str"),  # date
+        data.get("time_slot"), # time slot 
+        data.get("rate_per_hour"), # rate per hour
+        data.get("advance"),  # Advance
+        data.get("cash"),  # Cash Recived
+        data.get("bottle_amount"),  # Bottles amount
         0,  # Extra time (using this for duration)
         0,  # Extra time Amount
-        total_amount,  # Total
-        note,
+        data.get("total_amount"),  # Total
+        data.get("note"),
     ])
-    return parsed
+
+
+
 
 
 def find_and_validate_court(booking):

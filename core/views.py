@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import user_passes_test
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
-from .utils import process_booking
+from .utils import process_booking, add_booking_to_sheet
 
 
 @login_required
@@ -176,7 +176,20 @@ def create_booking(request):
                 payment_date=timezone.now() if payment_status else None,
                 status="CONFIRMED" if advance_payment > 0 or payment_status else "PENDING",
             )
-
+            add_booking_to_sheet({
+                'date_str': booking.booking_date.strftime('%Y-%m-%d'),
+                'court': booking.court.name,
+                "time_slot": f"{booking.start_time.strftime('%H:%M')} - {booking.end_time.strftime('%H:%M')}",
+                'total_amount': str(booking.payment_amount),
+                'advance_payment': str(booking.advance_payment),
+                'payment_method': booking.payment_method,
+                'advance_payment_method': booking.advance_payment_method,
+                'payment_status': 'Paid' if booking.payment_status else 'Pending',
+                "advance": booking.advance_payment,
+                "bottle_amount":booking.bottle_amount,
+                'note': booking.note,
+                'status': booking.status
+            })
             messages.success(request, "Booking created successfully!")
             return redirect("booking_list")
 

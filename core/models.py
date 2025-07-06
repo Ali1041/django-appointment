@@ -50,6 +50,7 @@ class Booking(models.Model):
     )
     ai_text = models.TextField(blank=True)
     ai_text_json = models.JSONField(null=True, blank=True)
+    bottle_amount = models.BigIntegerField(null=True, blank=True)
     booking_customer = models.ForeignKey(Customer, blank=True, null=True, on_delete=models.SET_NULL)
     class Meta:
         constraints = [
