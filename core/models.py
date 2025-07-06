@@ -55,7 +55,7 @@ class Blogs(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now=True)
-    cover_image = models.ImageField(upload_to="/images")
+    cover_image = models.TextField(blank=True)
     tag = models.CharField(blank=True, max_length=100)
     status = models.CharField(blank=True, max_length=100, default="pending")
 
