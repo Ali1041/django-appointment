@@ -24,7 +24,7 @@ def query_gemini(text):
             {
                 "parts": [
                     {
-                        "text": f"Extract JSON keys name,phone,start_time,end_time,hourly_rate,advance,bottle_amount,cash_received If any key is not present just put 0 in that:\n\n{text}"
+                        "text": f"Extract JSON keys name,phone,start_time,end_time,hourly_rate,advance,bottle_amount,cash_received, pitch . If any key is not present just put 0 in that:\n\n{text}"
                     }
                 ]
             }
@@ -32,8 +32,18 @@ def query_gemini(text):
     }
     return requests.post(url, headers=headers, json=data)
 
-SENSITIVE_SERVICE = {}
+service_account_str = os.getenv("SERVICE_ACCOUNT")
+if not service_account_str:
+    raise ValueError("SERVICE_ACCOUNT environment variable not set or empty")
 
+try:
+    service_account_info = json.loads(service_account_str)
+except json.JSONDecodeError as e:
+    raise ValueError(f"Failed to decode SERVICE_ACCOUNT JSON: {e}")
+
+
+SENSITIVE_SERVICE = service_account_info
+GOOGLE_SHEET_NAME = "June - 2025"
 
 # Sheets setup
 creds = Credentials.from_service_account_info(
@@ -41,8 +51,7 @@ creds = Credentials.from_service_account_info(
     scopes=["https://www.googleapis.com/auth/spreadsheets"]
 )
 gc = gspread.authorize(creds)
-sheet = gc.open_by_key(os.getenv("GOOGLE_SHEET_ID"))\
-          .worksheet(os.getenv("GOOGLE_SHEET_NAME", "Bookings"))
+sheet = gc.open_by_key(os.getenv("GOOGLE_SHEET_ID")).worksheet(GOOGLE_SHEET_NAME)
 
 
 def process_booking(data):
@@ -71,7 +80,7 @@ def process_booking(data):
     
     # Ensure hourly_rate is a float for DB insertion
     if 'hourly_rate' in parsed:
-        parsed['hourly_rate'] = float(parsed['hourly_rate'])
+        parsed['hourly_rate'] = int(parsed['hourly_rate'])
 
     # 3. Google Sheet
     start_time_str = parsed.get('start_time', '00:00')
@@ -90,6 +99,10 @@ def process_booking(data):
     total_amount = duration_in_hours * rate_per_hour
     if "bottle_amount" in parsed:
         total_amount += int(parsed.get("bottle_amount", 0))
+    
+    parsed['duration'] = str(duration)
+    parsed['duration_in_hours'] = int(duration_in_hours)
+
 
     time_slot = f"{start_time_str} - {end_time_str}"
     note = f"Name: {parsed.get('name', '')}, Phone: {parsed.get('phone', '')}"
@@ -105,7 +118,31 @@ def process_booking(data):
         0,  # Extra time (using this for duration)
         0,  # Extra time Amount
         total_amount,  # Total
-        note
+        note,
     ])
-    return
+    return parsed
 
+
+def find_and_validate_court(booking):
+    from .models import Court, Booking
+
+    # Find active cricket courts
+    cricket_courts = Court.objects.filter(name__icontains="cricket", is_active=True)
+
+    for court in cricket_courts:
+        conflicting_bookings = Booking.objects.filter(
+            court=court,
+            booking_date=booking.booking_date,
+            start_time__lt=booking.end_time,
+            end_time__gt=booking.start_time,
+        )
+        # If updating an existing booking, exclude it from the conflict check
+        if booking.pk:
+            conflicting_bookings = conflicting_bookings.exclude(pk=booking.pk)
+
+        if not conflicting_bookings.exists():
+            # Found an available cricket court
+            return court
+
+    # If no court is found after checking all cricket courts
+    raise ValueError("No available cricket courts for the selected time slot.")

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import CricketNet, Booking, Blogs
+from .models import Court, Booking, Blogs
 from datetime import datetime, timedelta, time, date
 from django.utils import timezone
 from decimal import Decimal
@@ -9,6 +9,36 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import user_passes_test
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
+from .utils import process_booking
+
+
+@login_required
+def ai_create_booking(request):
+    if request.method == "POST":
+        text = request.POST.get("text")
+        try:
+            booking_data = process_booking(text)
+            print(booking_data)
+            booking = Booking(
+                user=request.user,
+                booking_date=datetime.now().date(),
+                start_time=booking_data.get("start_time"),
+                end_time=booking_data.get("end_time"),
+                note=f"Name: {booking_data.get('name', '')}, Phone: {booking_data.get('phone', '')}",
+                ai_text=text,
+                ai_text_json=booking_data,
+                status="CONFIRMED",
+                booking_price=booking_data.get("hourly_rate"),
+                payment_amount=booking_data.get("hourly_rate") * booking_data.get("duration_in_hours")
+            )
+            booking.save()
+            messages.success(request, "AI booking created successfully!")
+            return redirect("booking_list")
+        except Exception as e:
+            messages.error(request, f"Error creating AI booking: {e}")
+            return redirect("ai_create_booking")
+
+    return render(request, "core/ai_create_booking.html")
 
 
 def is_admin(user):
@@ -52,11 +82,11 @@ def booking_list(request):
     date = request.GET.get("date")
 
     # Start with base queryset - show all bookings by default
-    booking_list = Booking.objects.select_related("cricket_net", "user").all()
+    booking_list = Booking.objects.select_related("court", "user").all()
 
     # Apply filters if they exist
     if pitch:
-        booking_list = booking_list.filter(cricket_net_id=pitch)
+        booking_list = booking_list.filter(court_id=pitch)
 
     if date:
         try:
@@ -69,7 +99,7 @@ def booking_list(request):
     booking_list = booking_list.order_by("-booking_date", "-start_time")
 
     # Get all cricket nets for the filter dropdown
-    cricket_nets = CricketNet.objects.all()
+    courts = Court.objects.all()
 
     # Number of bookings per page
     per_page = 10
@@ -86,7 +116,7 @@ def booking_list(request):
     context = {
         "bookings": bookings,
         "total_bookings": booking_list.count(),
-        "cricket_nets": cricket_nets,
+        "courts": courts,
         "selected_pitch": pitch,
         "selected_date": date,
     }
@@ -98,7 +128,7 @@ def booking_list(request):
 def create_booking(request):
     if request.method == "POST":
         try:
-            net_id = request.POST.get("cricket_net")
+            net_id = request.POST.get("court")
             date = request.POST.get("date")
             start_time = request.POST.get("start_time")
             end_time = request.POST.get("end_time")
@@ -108,11 +138,11 @@ def create_booking(request):
             advance_payment_method = request.POST.get("advance_payment_method")
             note = request.POST.get("note", "")
 
-            cricket_net = CricketNet.objects.get(id=net_id)
+            court = Court.objects.get(id=net_id)
 
             # Check for existing bookings
             existing_booking = Booking.objects.filter(
-                cricket_net=cricket_net,
+                court=court,
                 booking_date=date,
                 start_time__lt=end_time,
                 end_time__gt=start_time,
@@ -121,7 +151,7 @@ def create_booking(request):
             if existing_booking:
                 raise ValueError("This time slot is already booked.")
 
-            payment_amount = calculate_payment_amount(cricket_net, start_time, end_time)
+            payment_amount = calculate_payment_amount(court, start_time, end_time)
 
             # Convert payment_amount to Decimal if it isn't already
             if not isinstance(payment_amount, Decimal):
@@ -131,7 +161,7 @@ def create_booking(request):
                 raise ValueError("Advance payment cannot exceed total amount")
 
             booking = Booking.objects.create(
-                cricket_net=cricket_net,
+                court=court,
                 user=request.user,
                 booking_date=date,
                 start_time=start_time,
@@ -159,11 +189,11 @@ def create_booking(request):
             messages.error(request, f"An error occurred: {str(e)}")
         return redirect("create_booking")
 
-    cricket_nets = CricketNet.objects.filter(is_active=True)
+    courts = Court.objects.filter(is_active=True)
     return render(
         request,
         "core/create_booking.html",
-        {"cricket_nets": cricket_nets},
+        {"courts": courts},
     )
 
 
@@ -215,7 +245,7 @@ def is_peak_hour(current_time):
     return peak_start <= current_time <= peak_end
 
 
-def calculate_payment_amount(cricket_net, start_time, end_time):
+def calculate_payment_amount(court, start_time, end_time):
     try:
         start_time = datetime.strptime(start_time, "%H:%M").time()
         end_time = datetime.strptime(end_time, "%H:%M").time()
@@ -259,8 +289,8 @@ def calculate_payment_amount(cricket_net, start_time, end_time):
         regular_hours = Decimal(str((total_minutes - peak_minutes) / 60))
 
         # Calculate total amount
-        amount = (peak_hours * cricket_net.peak_hour_rate) + (
-            regular_hours * cricket_net.hourly_rate
+        amount = (peak_hours * court.peak_hour_rate) + (
+            regular_hours * court.hourly_rate
         )
         return Decimal(str(round(float(amount), 2)))
 

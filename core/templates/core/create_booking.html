@@ -9,8 +9,8 @@
         
         <div>
             <label class="block text-sm font-medium text-gray-700">Cricket Net</label>
-            <select name="cricket_net" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                {% for net in cricket_nets %}
+            <select name="court" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                {% for net in courts %}
                     <option value="{{ net.id }}">{{ net.name }} - ${{ net.hourly_rate }}/hr (Peak: ${{ net.peak_hour_rate }}/hr)</option>
                 {% endfor %}
             </select>

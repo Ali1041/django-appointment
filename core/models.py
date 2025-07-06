@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class CricketNet(models.Model):
+class Court(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
@@ -25,8 +25,9 @@ class Booking(models.Model):
         ("CANCELLED", "Cancelled"),
     ]
 
-    cricket_net = models.ForeignKey(CricketNet, on_delete=models.CASCADE)
+    court = models.ForeignKey(Court, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    booking_price = models.BigIntegerField(blank=True, null=True)
     booking_date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -41,15 +42,28 @@ class Booking(models.Model):
     advance_payment_method = models.CharField(
         max_length=10, choices=PAYMENT_CHOICES, blank=True
     )
-
+    ai_text = models.TextField(blank=True)
+    ai_text_json = models.JSONField(null=True, blank=True)
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["cricket_net", "booking_date", "start_time", "end_time"],
+                fields=["court", "booking_date", "start_time", "end_time"],
                 name="unique_booking",
             )
         ]
 
+
+    def save(self, *args, **kwargs):
+        from .utils import find_and_validate_court
+        if not self.court_id:
+            self.court = find_and_validate_court(self)
+        if self.booking_price is None:
+            self.booking_price = self.court.hourly_rate
+        
+        if not self.payment_amount:
+            self.payment_amount = self.booking_price
+
+        super().save(*args, **kwargs)
 
 class Blogs(models.Model):
     title = models.CharField(max_length=255)

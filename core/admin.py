@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import Booking, CricketNet, Blogs
+from .models import Booking, Court, Blogs
 
 # Register your models here.
-admin.site.register(CricketNet)
+admin.site.register(Court)
 admin.site.register(Booking)
 admin.site.register(Blogs)
