@@ -12,6 +12,12 @@ class Court(models.Model):
     def __str__(self):
         return self.name
 
+class Customer(models.Model):
+    name = models.CharField(max_length=255, blank=True)
+    phone = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.name
 
 class Booking(models.Model):
     PAYMENT_CHOICES = [
@@ -44,6 +50,7 @@ class Booking(models.Model):
     )
     ai_text = models.TextField(blank=True)
     ai_text_json = models.JSONField(null=True, blank=True)
+    booking_customer = models.ForeignKey(Customer, blank=True, null=True, on_delete=models.SET_NULL)
     class Meta:
         constraints = [
             models.UniqueConstraint(
