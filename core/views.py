@@ -198,45 +198,74 @@ def create_booking(request):
 
 
 @admin_required
+def delete_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    booking.delete()
+    messages.success(request, "Booking deleted successfully!")
+    return redirect("booking_list")
+
+
+@admin_required
 def edit_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
+    courts = Court.objects.filter(is_active=True)
 
     if request.method == "POST":
         try:
-            payment_status = request.POST.get("payment_status") == "on"
-            remaining_payment = Decimal(request.POST.get("remaining_payment", 0))
-            payment_method = request.POST.get("payment_method")
+            # Extract data from POST request
+            booking.court_id = request.POST.get("court")
+            booking.booking_date = request.POST.get("date")
+            booking.start_time = request.POST.get("start_time")
+            booking.end_time = request.POST.get("end_time")
+            booking.payment_amount = Decimal(request.POST.get("total_amount"))
+            booking.advance_payment = Decimal(request.POST.get("advance_payment"))
+            booking.advance_payment_method = request.POST.get("advance_payment_method")
+            booking.payment_method = request.POST.get("payment_method")
+            booking.payment_status = request.POST.get("payment_status") == "on"
+            booking.note = request.POST.get("note")
 
-            if remaining_payment > (booking.payment_amount - booking.advance_payment):
-                raise ValueError("Payment amount exceeds remaining balance")
-
-            if (
-                payment_status
-                and (booking.advance_payment + remaining_payment)
-                < booking.payment_amount
+            # Recalculate payment amount if necessary
+            if any(
+                k in request.POST
+                for k in ["court", "date", "start_time", "end_time"]
             ):
-                raise ValueError("Total payments do not match booking amount")
+                booking.payment_amount = calculate_payment_amount(
+                    booking.court, booking.start_time, booking.end_time
+                )
 
-            booking.payment_status = payment_status
+            # Validate advance payment
+            if booking.advance_payment > booking.payment_amount:
+                raise ValueError("Advance payment cannot exceed total amount.")
 
-            # Status remains CONFIRMED if there was any advance payment
-            if payment_status:
+            # Update payment status and date
+            if booking.payment_status:
                 booking.payment_date = timezone.now()
-                if not booking.status == "CONFIRMED":
-                    booking.status = "CONFIRMED"
-                booking.payment_method = payment_method
+            else:
+                # If unchecked, reset payment status
+                if (
+                    booking.advance_payment < booking.payment_amount
+                    or booking.advance_payment == 0
+                ):
+                    booking.payment_date = None
+
+            # Update booking status
+            if booking.advance_payment > 0:
+                booking.status = "CONFIRMED"
+            else:
+                booking.status = "PENDING"
 
             booking.save()
-
             messages.success(request, "Booking updated successfully!")
             return redirect("booking_list")
 
         except ValueError as e:
             messages.error(request, str(e))
         except Exception as e:
-            messages.error(request, f"An error occurred: {str(e)}")
+            messages.error(request, f"An unexpected error occurred: {e}")
 
-    return render(request, "core/edit_booking.html", {"booking": booking})
+    return render(
+        request, "core/edit_booking.html", {"booking": booking, "courts": courts}
+    )
 
 
 def is_peak_hour(current_time):
