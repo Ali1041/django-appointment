@@ -128,17 +128,18 @@ def booking_list(request):
 def create_booking(request):
     if request.method == "POST":
         try:
-            net_id = request.POST.get("court")
+            court_id = request.POST.get("court")
             date = request.POST.get("date")
             start_time = request.POST.get("start_time")
             end_time = request.POST.get("end_time")
-            payment_method = request.POST.get("payment_method")
-            # Convert to Decimal instead of float for monetary calculations
+            total_amount = Decimal(request.POST.get("total_amount", "0"))
             advance_payment = Decimal(request.POST.get("advance_payment", "0"))
             advance_payment_method = request.POST.get("advance_payment_method")
+            payment_method = request.POST.get("payment_method")
+            payment_status = request.POST.get("payment_status") == "on"
             note = request.POST.get("note", "")
 
-            court = Court.objects.get(id=net_id)
+            court = Court.objects.get(id=court_id)
 
             # Check for existing bookings
             existing_booking = Booking.objects.filter(
@@ -151,14 +152,12 @@ def create_booking(request):
             if existing_booking:
                 raise ValueError("This time slot is already booked.")
 
-            payment_amount = calculate_payment_amount(court, start_time, end_time)
+            # Calculate payment amount if not provided
+            if total_amount == 0:
+                total_amount = calculate_payment_amount(court, start_time, end_time)
 
-            # Convert payment_amount to Decimal if it isn't already
-            if not isinstance(payment_amount, Decimal):
-                payment_amount = Decimal(str(payment_amount))
-
-            if advance_payment > payment_amount:
-                raise ValueError("Advance payment cannot exceed total amount")
+            if advance_payment > total_amount:
+                raise ValueError("Advance payment cannot exceed total amount.")
 
             booking = Booking.objects.create(
                 court=court,
@@ -166,18 +165,16 @@ def create_booking(request):
                 booking_date=date,
                 start_time=start_time,
                 end_time=end_time,
-                payment_method=payment_method,
-                payment_amount=payment_amount,
+                payment_amount=total_amount,
                 advance_payment=advance_payment,
                 advance_payment_method=(
                     advance_payment_method if advance_payment > 0 else ""
                 ),
+                payment_method=payment_method,
+                payment_status=payment_status,
                 note=note,
-                payment_status=advance_payment >= payment_amount,
-                payment_date=(
-                    timezone.now() if advance_payment >= payment_amount else None
-                ),
-                status="CONFIRMED" if advance_payment > 0 else "PENDING",
+                payment_date=timezone.now() if payment_status else None,
+                status="CONFIRMED" if advance_payment > 0 or payment_status else "PENDING",
             )
 
             messages.success(request, "Booking created successfully!")
