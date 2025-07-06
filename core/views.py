@@ -129,9 +129,14 @@ def create_booking(request):
     if request.method == "POST":
         try:
             court_id = request.POST.get("court")
-            date = request.POST.get("date")
-            start_time = request.POST.get("start_time")
-            end_time = request.POST.get("end_time")
+            date_str = request.POST.get("date")
+            start_time_str = request.POST.get("start_time")
+            end_time_str = request.POST.get("end_time")
+            
+            # Convert string inputs to datetime objects
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            start_time = datetime.strptime(start_time_str, "%H:%M").time()
+            end_time = datetime.strptime(end_time_str, "%H:%M").time()
             total_amount = Decimal(request.POST.get("total_amount", "0"))
             advance_payment = Decimal(request.POST.get("advance_payment", "0"))
             advance_payment_method = request.POST.get("advance_payment_method")
@@ -224,9 +229,14 @@ def edit_booking(request, booking_id):
         try:
             # Extract data from POST request
             booking.court_id = request.POST.get("court")
-            booking.booking_date = request.POST.get("date")
-            booking.start_time = request.POST.get("start_time")
-            booking.end_time = request.POST.get("end_time")
+            date_str = request.POST.get("date")
+            start_time_str = request.POST.get("start_time")
+            end_time_str = request.POST.get("end_time")
+
+            # Convert string inputs to datetime objects
+            booking.booking_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            booking.start_time = datetime.strptime(start_time_str, "%H:%M").time()
+            booking.end_time = datetime.strptime(end_time_str, "%H:%M").time()
             booking.payment_amount = Decimal(request.POST.get("total_amount"))
             booking.advance_payment = Decimal(request.POST.get("advance_payment"))
             booking.advance_payment_method = request.POST.get("advance_payment_method")
@@ -286,9 +296,6 @@ def is_peak_hour(current_time):
 
 def calculate_payment_amount(court, start_time, end_time):
     try:
-        start_time = datetime.strptime(start_time, "%H:%M").time()
-        end_time = datetime.strptime(end_time, "%H:%M").time()
-
         # Calculate duration considering midnight wrap
         if end_time < start_time:
             duration = timedelta(
