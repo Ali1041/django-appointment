@@ -137,6 +137,8 @@ def create_booking(request):
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
             start_time = datetime.strptime(start_time_str, "%H:%M").time()
             end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            booking_price = Decimal(request.POST.get("booking_price", "0"))
+            bottle_amount = Decimal(request.POST.get("bottle_amount", "0"))
             total_amount = Decimal(request.POST.get("total_amount", "0"))
             advance_payment = Decimal(request.POST.get("advance_payment", "0"))
             advance_payment_method = request.POST.get("advance_payment_method")
@@ -157,9 +159,6 @@ def create_booking(request):
             if existing_booking:
                 raise ValueError("This time slot is already booked.")
 
-            # Calculate payment amount if not provided
-            if total_amount == 0:
-                total_amount = calculate_payment_amount(court, start_time, end_time)
 
             if advance_payment > total_amount:
                 raise ValueError("Advance payment cannot exceed total amount.")
@@ -170,6 +169,8 @@ def create_booking(request):
                 booking_date=date,
                 start_time=start_time,
                 end_time=end_time,
+                booking_price=booking_price,
+                bottle_amount=bottle_amount,
                 payment_amount=total_amount,
                 advance_payment=advance_payment,
                 advance_payment_method=(
@@ -237,6 +238,8 @@ def edit_booking(request, booking_id):
             booking.booking_date = datetime.strptime(date_str, "%Y-%m-%d").date()
             booking.start_time = datetime.strptime(start_time_str, "%H:%M").time()
             booking.end_time = datetime.strptime(end_time_str, "%H:%M").time()
+            booking.booking_price = Decimal(request.POST.get("booking_price"))
+            booking.bottle_amount = Decimal(request.POST.get("bottle_amount"))
             booking.payment_amount = Decimal(request.POST.get("total_amount"))
             booking.advance_payment = Decimal(request.POST.get("advance_payment"))
             booking.advance_payment_method = request.POST.get("advance_payment_method")
@@ -244,14 +247,6 @@ def edit_booking(request, booking_id):
             booking.payment_status = request.POST.get("payment_status") == "on"
             booking.note = request.POST.get("note")
 
-            # Recalculate payment amount if necessary
-            if any(
-                k in request.POST
-                for k in ["court", "date", "start_time", "end_time"]
-            ):
-                booking.payment_amount = calculate_payment_amount(
-                    booking.court, booking.start_time, booking.end_time
-                )
 
             # Validate advance payment
             if booking.advance_payment > booking.payment_amount:
