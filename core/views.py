@@ -18,18 +18,39 @@ from django.db.models.functions import Coalesce, TruncDay, TruncWeek, TruncMonth
 def dashboard(request):
     # Get the selected period, default to 'daily'
     period = request.GET.get("period", "daily")
+    today = timezone.now().date()
 
-    # Determine the truncation level based on the selected period
+    # Determine the date range for filtering
     if period == "weekly":
-        trunc_level = TruncWeek("booking_date")
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
     elif period == "monthly":
-        trunc_level = TruncMonth("booking_date")
-    else:
-        trunc_level = TruncDay("booking_date")
+        start_date = today.replace(day=1)
+        # A reliable way to get the last day of the month
+        next_month = start_date.replace(day=28) + timedelta(days=4)
+        end_date = next_month - timedelta(days=next_month.day)
+    else:  # daily
+        start_date = today
+        end_date = today
 
-    # Aggregate booking data
+    # Filter bookings for the selected period
+    period_bookings = Booking.objects.filter(booking_date__range=[start_date, end_date])
+
+    # Calculate total stats for the cards
+    total_bookings = period_bookings.count()
+    total_revenue = period_bookings.aggregate(
+        total=Coalesce(Sum("payment_amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+    total_cash = period_bookings.filter(payment_method="CASH").aggregate(
+        total=Coalesce(Sum("payment_amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+    total_online = period_bookings.filter(payment_method="ONLINE").aggregate(
+        total=Coalesce(Sum("payment_amount"), Value(0, output_field=DecimalField()))
+    )["total"]
+
+    # Aggregate booking data for the summary table, grouped by day
     booking_summary = (
-        Booking.objects.annotate(trunc_date=trunc_level)
+        period_bookings.annotate(trunc_date=TruncDay("booking_date"))
         .values("trunc_date")
         .annotate(
             total_amount=Coalesce(Sum("payment_amount"), Value(0, output_field=DecimalField())),
@@ -60,6 +81,10 @@ def dashboard(request):
     context = {
         "booking_summary": booking_summary,
         "selected_period": period,
+        "total_bookings": total_bookings,
+        "total_revenue": total_revenue,
+        "total_cash": total_cash,
+        "total_online": total_online,
     }
 
     return render(request, "core/dashboard.html", context)
