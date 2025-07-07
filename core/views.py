@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Court, Booking, Blogs
+from .models import Court, Booking, Blogs, Customer
 from datetime import datetime, timedelta, time, date
 from django.utils import timezone
 from decimal import Decimal
@@ -280,6 +280,7 @@ def delete_booking(request, booking_id):
 def edit_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     courts = Court.objects.filter(is_active=True)
+    customers = Customer.objects.all()
 
     if request.method == "POST":
         try:
@@ -334,7 +335,7 @@ def edit_booking(request, booking_id):
             messages.error(request, f"An unexpected error occurred: {e}")
 
     return render(
-        request, "core/edit_booking.html", {"booking": booking, "courts": courts}
+        request, "core/edit_booking.html", {"booking": booking, "courts": courts, "customers": customers}
     )
 
 

@@ -4,67 +4,67 @@
         <label for="court" class="block text-sm font-medium text-gray-700 mb-1">Net</label>
         <select id="court" name="court" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             {% for court in courts %}
-                <option value="{{ court.id }}" {% if form.instance.court_id == court.id %}selected{% endif %}>{{ court.name }}</option>
+                <option value="{{ court.id }}" {% if form_instance.court_id == court.id %}selected{% endif %}>{{ court.name }}</option>
             {% endfor %}
         </select>
     </div>
     <div>
         <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-        <input type="date" id="date" name="date" value="{{ form.instance.booking_date|date:'Y-m-d' }}" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <input type="date" id="date" name="date" value="{{ form_instance.booking_date|date:'Y-m-d' }}" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
     </div>
     <div>
         <label for="customer" class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
         <select id="customer" name="customer" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             {% for customer in customers %}
-                <option value="{{ customer.id }}" {% if form.instance.customer_id == customer.id %}selected{% endif %}>{{ customer.name }}</option>
+                <option value="{{ customer.id }}" {% if form_instance.customer_id == customer.id %}selected{% endif %}>{{ customer.name }}</option>
             {% endfor %}
         </select>
     </div>
     <div>
         <label for="start_time" class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-        <input type="time" id="start_time" name="start_time" value="{{ form.instance.start_time|time:'H:i' }}" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <input type="time" id="start_time" name="start_time" value="{{ form_instance.start_time|time:'H:i' }}" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
     </div>
     <div>
         <label for="end_time" class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-        <input type="time" id="end_time" name="end_time" value="{{ form.instance.end_time|time:'H:i' }}" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <input type="time" id="end_time" name="end_time" value="{{ form_instance.end_time|time:'H:i' }}" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
     </div>
     <div>
         <label for="booking_price" class="block text-sm font-medium text-gray-700 mb-1">Hourly Rate</label>
-        <input type="number" id="booking_price" name="booking_price" value="{{ form.instance.booking_price }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <input type="number" id="booking_price" name="booking_price" value="{{ form_instance.booking_price }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
     </div>
     <div>
         <label for="bottle_amount" class="block text-sm font-medium text-gray-700 mb-1">Bottle Amount</label>
-        <input type="number" id="bottle_amount" name="bottle_amount" value="{{ form.instance.bottle_amount }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <input type="number" id="bottle_amount" name="bottle_amount" value="{{ form_instance.bottle_amount }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
     </div>
     <div>
         <label for="total_amount" class="block text-sm font-medium text-gray-700 mb-1">Total Amount</label>
-        <input type="number" id="total_amount" name="total_amount" value="{{ form.instance.payment_amount }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <input type="number" id="total_amount" name="total_amount" value="{{ form_instance.payment_amount }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
     </div>
     <div>
         <label for="advance_payment" class="block text-sm font-medium text-gray-700 mb-1">Advance Paid</label>
-        <input type="number" id="advance_payment" name="advance_payment" value="{{ form.instance.advance_payment }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <input type="number" id="advance_payment" name="advance_payment" value="{{ form_instance.advance_payment }}" step="0.01" min="0" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
     </div>
     <div>
         <label for="advance_payment_method" class="block text-sm font-medium text-gray-700 mb-1">Advance Payment Method</label>
         <select id="advance_payment_method" name="advance_payment_method" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-            <option value="" {% if not form.instance.advance_payment_method %}selected{% endif %}>None</option>
-            <option value="CASH" {% if form.instance.advance_payment_method == 'CASH' %}selected{% endif %}>Cash</option>
-            <option value="ONLINE" {% if form.instance.advance_payment_method == 'ONLINE' %}selected{% endif %}>Online</option>
+            <option value="" {% if not form_instance.advance_payment_method %}selected{% endif %}>None</option>
+            <option value="CASH" {% if form_instance.advance_payment_method == 'CASH' %}selected{% endif %}>Cash</option>
+            <option value="ONLINE" {% if form_instance.advance_payment_method == 'ONLINE' %}selected{% endif %}>Online</option>
         </select>
     </div>
     <div>
         <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
         <select id="payment_method" name="payment_method" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-            <option value="CASH" {% if form.instance.payment_method == 'CASH' %}selected{% endif %}>Cash</option>
-            <option value="ONLINE" {% if form.instance.payment_method == 'ONLINE' %}selected{% endif %}>Online</option>
+            <option value="CASH" {% if form_instance.payment_method == 'CASH' %}selected{% endif %}>Cash</option>
+            <option value="ONLINE" {% if form_instance.payment_method == 'ONLINE' %}selected{% endif %}>Online</option>
         </select>
     </div>
     <div class="md:col-span-2">
         <label for="note" class="block text-sm font-medium text-gray-700 mb-1">Note</label>
-        <textarea id="note" name="note" rows="4" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ form.instance.note }}</textarea>
+        <textarea id="note" name="note" rows="4" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ form_instance.note }}</textarea>
     </div>
     <div class="md:col-span-2 flex items-center">
-        <input type="checkbox" name="payment_status" id="payment_status" {% if form.instance.payment_status %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+        <input type="checkbox" name="payment_status" id="payment_status" {% if form_instance.payment_status %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
         <label for="payment_status" class="ml-2 block text-sm text-gray-900">Payment Received</label>
     </div>
 </div>
