@@ -14,7 +14,7 @@
     </div>
     <div>
         <label for="customer" class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-        <select id="customer" name="customer" required class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+        <select id="customer" name="customer" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             {% for customer in customers %}
                 <option value="{{ customer.id }}" {% if form_instance.customer_id == customer.id %}selected{% endif %}>{{ customer.name }}</option>
             {% endfor %}
