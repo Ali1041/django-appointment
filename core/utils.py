@@ -43,7 +43,7 @@ except json.JSONDecodeError as e:
 
 
 SENSITIVE_SERVICE = service_account_info
-GOOGLE_SHEET_NAME = "June - 2025"
+GOOGLE_SHEET_NAME = "July - 2025"
 
 # Sheets setup
 creds = Credentials.from_service_account_info(
