@@ -37,12 +37,14 @@ if not service_account_str:
     raise ValueError("SERVICE_ACCOUNT environment variable not set or empty")
 
 try:
+    print(service_account_str)
     service_account_info = json.loads(service_account_str)
 except json.JSONDecodeError as e:
     raise ValueError(f"Failed to decode SERVICE_ACCOUNT JSON: {e}")
 
 
 SENSITIVE_SERVICE = service_account_info
+
 GOOGLE_SHEET_NAME = "July - 2025"
 
 # Sheets setup
@@ -116,9 +118,22 @@ def process_booking(data):
     add_booking_to_sheet(parsed)
     return parsed
 
+def next_empty_row_after(header_label):
+    # 1) find the header cell
+    cell = sheet.find(header_label)
+    print(cell)
+    # 2) look down column A (or whatever your first‑col is) for the first blank
+    col_vals = sheet.col_values(1)[1:]  
+    for offset, val in enumerate(col_vals, start=1):
+        if not val.strip():
+            return 1 + offset
+    # if no blank found, just append at very bottom
+    return len(col_vals) + 1 + 1
+
 
 def add_booking_to_sheet(data):
-    sheet.append_row([
+    target_row = next_empty_row_after("Revenue_9")
+    sheet_data = sheet.insert_row([
         data.get("date_str"),  # date
         data.get("time_slot"), # time slot 
         data.get("rate_per_hour"), # rate per hour
@@ -129,7 +144,9 @@ def add_booking_to_sheet(data):
         0,  # Extra time Amount
         data.get("total_amount"),  # Total
         data.get("note"),
-    ])
+    ], index=target_row, value_input_option="USER_ENTERED")
+    print(sheet_data)
+    return
 
 
 
