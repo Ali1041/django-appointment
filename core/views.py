@@ -10,6 +10,59 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from .utils import process_booking, add_booking_to_sheet
+from django.db.models import Sum, Case, When, Value, DecimalField
+from django.db.models.functions import Coalesce, TruncDay, TruncWeek, TruncMonth
+
+
+@login_required
+def dashboard(request):
+    # Get the selected period, default to 'daily'
+    period = request.GET.get("period", "daily")
+
+    # Determine the truncation level based on the selected period
+    if period == "weekly":
+        trunc_level = TruncWeek("booking_date")
+    elif period == "monthly":
+        trunc_level = TruncMonth("booking_date")
+    else:
+        trunc_level = TruncDay("booking_date")
+
+    # Aggregate booking data
+    booking_summary = (
+        Booking.objects.annotate(trunc_date=trunc_level)
+        .values("trunc_date")
+        .annotate(
+            total_amount=Coalesce(Sum("payment_amount"), Value(0, output_field=DecimalField())),
+            cash_amount=Coalesce(
+                Sum(
+                    Case(
+                        When(payment_method="CASH", then="payment_amount"),
+                        default=Value(0),
+                        output_field=DecimalField(),
+                    )
+                ),
+                Value(0, output_field=DecimalField()),
+            ),
+            online_amount=Coalesce(
+                Sum(
+                    Case(
+                        When(payment_method="ONLINE", then="payment_amount"),
+                        default=Value(0),
+                        output_field=DecimalField(),
+                    )
+                ),
+                Value(0, output_field=DecimalField()),
+            ),
+        )
+        .order_by("-trunc_date")
+    )
+
+    context = {
+        "booking_summary": booking_summary,
+        "selected_period": period,
+    }
+
+    return render(request, "core/dashboard.html", context)
 
 
 @login_required

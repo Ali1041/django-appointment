@@ -1,21 +1,42 @@
-<!-- templates/auth/login.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Cricket Net Booking - Admin Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Playground - Admin Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a237e;
+            --secondary-color: #ff6f00;
+        }
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #101a65;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 h-screen flex items-center justify-center">
+<body class="h-screen flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
-        <div class="text-center mb-10">
-            <h1 class="text-3xl font-bold text-gray-900">Cricket Net Booking</h1>
+        <div class="text-center mb-8">
+            <img src="https://i.imgur.com/1Y3d2S6.png" alt="The Playground Logo" class="h-24 mx-auto mb-4">
+            <h1 class="text-4xl font-bold text-gray-800">The Playground</h1>
             <p class="text-gray-600 mt-2">Admin Portal</p>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-8">
+        <div class="bg-white rounded-xl shadow-2xl p-8">
             {% if messages %}
                 {% for message in messages %}
-                    <div class="mb-4 p-4 rounded {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -26,21 +47,17 @@
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
                     <input type="text" name="username" id="username" required 
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                                  focus:border-blue-500 focus:ring-blue-500">
+                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
 
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
                     <input type="password" name="password" id="password" required 
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                                  focus:border-blue-500 focus:ring-blue-500">
+                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
 
                 <button type="submit" 
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md 
-                               shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 
-                               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Sign In
                 </button>
             </form>

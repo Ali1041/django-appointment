@@ -1,32 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Playground</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a237e;
+            --secondary-color: #ff6f00;
+        }
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Poppins', sans-serif;
+        }
+        .navbar {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .nav-link {
+            color: white;
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: var(--secondary-color);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #101a65;
+        }
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #e65100;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-blue-600 text-white p-4">
-        <div class="flex gap-10 justify-center items-center">
-            <div class="">
-                <h1 class="text-2xl font-bold">The Playground</h1>
+<body class="flex flex-col min-h-screen">
+    <nav class="navbar shadow-lg">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="/bookings" class="flex items-center">
+                <img src="https://i.imgur.com/1Y3d2S6.png" alt="The Playground Logo" class="h-12 mr-3">
+                <span class="text-2xl font-bold">The Playground</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="/bookings" class="nav-link">Home</a>
+                <a href="/booking/ai-create/" class="nav-link">AI Booking</a>
+                <a href="/dashboard" class="nav-link">Dashboard</a>
             </div>
-            <div>
-                <a href="/bookings">Home</a>
-            </div>
-            <div>
-                <a href="/booking/ai-create/">AI Booking</a>
+            <div class="md:hidden">
+                <button id="menu-btn" class="text-white focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
             </div>
         </div>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="/bookings" class="block py-2 nav-link">Home</a>
+            <a href="/booking/ai-create/" class="block py-2 nav-link">AI Booking</a>
+            <a href="/dashboard" class="block py-2 nav-link">Dashboard</a>
+        </div>
     </nav>
-    <div class="container mx-auto mt-8 px-4">
+
+    <main class="flex-grow container mx-auto mt-8 px-4">
         {% if messages %}
             {% for message in messages %}
-                <div class="mb-4 p-4 rounded {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                <div class="mb-4 p-4 rounded-lg shadow-md {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
         {% endif %}
         {% block content %}{% endblock %}
-    </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2024 The Playground. All rights reserved.</p>
+            <div class="flex justify-center space-x-4 mt-4">
+                <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('menu-btn').addEventListener('click', function() {
+            var mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
 </body>
 </html>

@@ -1,80 +1,20 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-bold mb-6">Create New Booking</h2>
-    
-    <form method="post" class="space-y-4">
-        {% csrf_token %}
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label for="court" class="block text-sm font-medium text-gray-700">Net</label>
-                <select id="court" name="court" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    {% for court in courts %}
-                        <option value="{{ court.id }}">{{ court.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
-                <input type="date" id="date" name="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-            <div>
-                <label for="start_time" class="block text-sm font-medium text-gray-700">Start Time</label>
-                <input type="time" id="start_time" name="start_time" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-            <div>
-                <label for="end_time" class="block text-sm font-medium text-gray-700">End Time</label>
-                <input type="time" id="end_time" name="end_time" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-            <div>
-                <label for="booking_price" class="block text-sm font-medium text-gray-700">Hourly Rate</label>
-                <input type="number" id="booking_price" name="booking_price" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-            <div>
-                <label for="bottle_amount" class="block text-sm font-medium text-gray-700">Bottle Amount</label>
-                <input type="number" id="bottle_amount" name="bottle_amount" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-            <div>
-                <label for="total_amount" class="block text-sm font-medium text-gray-700">Total Amount</label>
-                <input type="number" id="total_amount" name="total_amount" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-            <div>
-                <label for="advance_payment" class="block text-sm font-medium text-gray-700">Advance Paid</label>
-                <input type="number" id="advance_payment" name="advance_payment" step="0.01" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
-            <div>
-                <label for="advance_payment_method" class="block text-sm font-medium text-gray-700">Advance Payment Method</label>
-                <select id="advance_payment_method" name="advance_payment_method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <option value="">None</option>
-                    <option value="CASH">Cash</option>
-                    <option value="ONLINE">Online</option>
-                </select>
-            </div>
-            <div>
-                <label for="payment_method" class="block text-sm font-medium text-gray-700">Payment Method</label>
-                <select id="payment_method" name="payment_method" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <option value="CASH">Cash</option>
-                    <option value="ONLINE">Online</option>
-                </select>
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div class="p-6 md:p-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Create New Booking</h1>
+                <form method="post" class="space-y-6">
+                    {% include 'core/form_template.html' %}
+                    <div class="flex justify-end space-x-4 pt-6 border-t mt-6">
+                        <a href="{% url 'booking_list' %}" class="bg-gray-200 text-gray-700 font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-300 transition-colors duration-300">Cancel</a>
+                        <button type="submit" class="btn-primary font-semibold px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">Create Booking</button>
+                    </div>
+                </form>
             </div>
         </div>
-
-        <div class="flex items-center">
-            <input type="checkbox" name="payment_status" id="payment_status" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-            <label for="payment_status" class="ml-2 block text-sm text-gray-900">Payment Received</label>
-        </div>
-
-        <div>
-            <label for="note" class="block text-sm font-medium text-gray-700">Note</label>
-            <textarea id="note" name="note" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
-        </div>
-
-        <div class="flex justify-end space-x-4">
-            <a href="{% url 'booking_list' %}" class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200">Cancel</a>
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Create Booking</button>
-        </div>
-    </form>
+    </div>
 </div>
 {% endblock %}

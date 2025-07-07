@@ -1,0 +1,83 @@
+{% extends "core/base.html" %}
+{% load booking_extras %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-4xl font-bold text-gray-800">Dashboard</h1>
+        <div class="flex rounded-lg shadow-sm">
+            <a href="?period=daily" class="px-4 py-2 font-semibold rounded-l-lg border {% if selected_period == 'daily' %}btn-primary{% else %}bg-white text-gray-700{% endif %}">
+                Daily
+            </a>
+            <a href="?period=weekly" class="px-4 py-2 font-semibold border-t border-b {% if selected_period == 'weekly' %}btn-primary{% else %}bg-white text-gray-700{% endif %}">
+                Weekly
+            </a>
+            <a href="?period=monthly" class="px-4 py-2 font-semibold rounded-r-lg border {% if selected_period == 'monthly' %}btn-primary{% else %}bg-white text-gray-700{% endif %}">
+                Monthly
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
+            <div class="bg-blue-100 p-4 rounded-full mr-4">
+                <i class="fas fa-dollar-sign text-3xl text-blue-600"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-lg">Total Revenue</h3>
+                <p class="text-3xl font-bold text-gray-800">{{ total_revenue|default:"0"|currency }}</p>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
+            <div class="bg-green-100 p-4 rounded-full mr-4">
+                <i class="fas fa-cash-register text-3xl text-green-600"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-lg">Cash Payments</h3>
+                <p class="text-3xl font-bold text-gray-800">{{ total_cash|default:"0"|currency }}</p>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
+            <div class="bg-yellow-100 p-4 rounded-full mr-4">
+                <i class="fas fa-credit-card text-3xl text-yellow-600"></i>
+            </div>
+            <div>
+                <h3 class="text-gray-500 text-lg">Online Payments</h3>
+                <p class="text-3xl font-bold text-gray-800">{{ total_online|default:"0"|currency }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white shadow-xl rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b">
+            <h2 class="text-2xl font-semibold text-gray-700">Booking Summary</h2>
+        </div>
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cash</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Online</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for summary in booking_summary %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ summary.trunc_date|date:"Y-m-d" }}</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ summary.total_amount|currency }}</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ summary.cash_amount|currency }}</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ summary.online_amount|currency }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-10 text-gray-500">No data available for this period.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
