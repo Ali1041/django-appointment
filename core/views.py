@@ -194,7 +194,7 @@ def create_booking(request):
                 'payment_status': 'Paid' if booking.payment_status else 'Pending',
                 "advance": str(booking.advance_payment or 0),
                 "bottle_amount": str(booking.bottle_amount or 0),
-                "cash": str(booking.payment_amount),
+                "cash": str(booking.payment_amount - booking.advance_payment),
                 'note': booking.note,
                 'status': booking.status
             })
