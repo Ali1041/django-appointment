@@ -137,10 +137,10 @@ def create_booking(request):
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
             start_time = datetime.strptime(start_time_str, "%H:%M").time()
             end_time = datetime.strptime(end_time_str, "%H:%M").time()
-            booking_price = Decimal(request.POST.get("booking_price", "0"))
-            bottle_amount = Decimal(request.POST.get("bottle_amount", "0"))
-            total_amount = Decimal(request.POST.get("total_amount", "0"))
-            advance_payment = Decimal(request.POST.get("advance_payment", "0"))
+            booking_price = Decimal(request.POST.get("booking_price") or '0')
+            bottle_amount = Decimal(request.POST.get("bottle_amount") or '0')
+            total_amount = Decimal(request.POST.get("total_amount") or '0')
+            advance_payment = Decimal(request.POST.get("advance_payment") or '0')
             advance_payment_method = request.POST.get("advance_payment_method")
             payment_method = request.POST.get("payment_method")
             payment_status = request.POST.get("payment_status") == "on"
@@ -186,13 +186,14 @@ def create_booking(request):
                 'date_str': booking.booking_date.strftime('%Y-%m-%d'),
                 'court': booking.court.name,
                 "time_slot": f"{booking.start_time.strftime('%H:%M')} - {booking.end_time.strftime('%H:%M')}",
+                "rate_per_hour": str(booking.booking_price),
                 'total_amount': str(booking.payment_amount),
                 'advance_payment': str(booking.advance_payment),
                 'payment_method': booking.payment_method,
                 'advance_payment_method': booking.advance_payment_method,
                 'payment_status': 'Paid' if booking.payment_status else 'Pending',
-                "advance": booking.advance_payment,
-                "bottle_amount":booking.bottle_amount,
+                "advance": str(booking.advance_payment or 0),
+                "bottle_amount": str(booking.bottle_amount or 0),
                 'note': booking.note,
                 'status': booking.status
             })
@@ -201,8 +202,8 @@ def create_booking(request):
 
         except ValueError as e:
             messages.error(request, str(e))
-        except Exception as e:
-            messages.error(request, f"An error occurred: {str(e)}")
+        # except Exception as e:
+        #     messages.error(request, f"An error occurred: {str(e)}")
         return redirect("create_booking")
 
     courts = Court.objects.filter(is_active=True)
@@ -238,10 +239,10 @@ def edit_booking(request, booking_id):
             booking.booking_date = datetime.strptime(date_str, "%Y-%m-%d").date()
             booking.start_time = datetime.strptime(start_time_str, "%H:%M").time()
             booking.end_time = datetime.strptime(end_time_str, "%H:%M").time()
-            booking.booking_price = Decimal(request.POST.get("booking_price"))
-            booking.bottle_amount = Decimal(request.POST.get("bottle_amount"))
-            booking.payment_amount = Decimal(request.POST.get("total_amount"))
-            booking.advance_payment = Decimal(request.POST.get("advance_payment"))
+            booking.booking_price = Decimal(request.POST.get("booking_price") or '0')
+            booking.bottle_amount = Decimal(request.POST.get("bottle_amount") or '0')
+            booking.payment_amount = Decimal(request.POST.get("total_amount") or '0')
+            booking.advance_payment = Decimal(request.POST.get("advance_payment") or '0')
             booking.advance_payment_method = request.POST.get("advance_payment_method")
             booking.payment_method = request.POST.get("payment_method")
             booking.payment_status = request.POST.get("payment_status") == "on"
