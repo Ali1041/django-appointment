@@ -80,7 +80,7 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for summary in booking_summary %}
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ summary.trunc_date|date:"Y-m-d" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ summary.trunc_date|date:"l, d M Y" }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ summary.total_amount|currency }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ summary.cash_amount|currency }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ summary.online_amount|currency }}</td>
