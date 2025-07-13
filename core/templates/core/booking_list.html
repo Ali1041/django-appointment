@@ -61,7 +61,7 @@
                             <div class="text-sm font-semibold text-gray-900">{{ booking.court.name }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-800">{{ booking.booking_date }}</div>
+                            <div class="text-sm text-gray-800">{{ booking.booking_date|date:"l, d M Y" }}</div>
                             <div class="text-xs text-gray-500">{{ booking.start_time }} - {{ booking.end_time }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -132,7 +132,7 @@ function showBookingDetails(bookingId) {
         {% for booking in bookings %}
         "{{ booking.id }}": {
             "net": "{{ booking.court.name }}",
-            "date": "{{ booking.booking_date }}",
+            "date": "{{ booking.booking_date|date:"l, d M Y" }}",
             "time": "{{ booking.start_time }} - {{ booking.end_time }}",
             "created": "{{ booking.created_at|date:'d M Y, H:i' }}",
             "payment_method": "{{ booking.get_payment_method_display }}",
