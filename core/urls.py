@@ -12,4 +12,8 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
     path("/blogs", views.get_blogs, name="blogs"),
     path("/blog/<int:blog_id>/", views.get_blog_detail, name="blog"),
+    path("customers/", views.customer_list, name="customer_list"),
+    path("customer/create/", views.create_customer, name="create_customer"),
+    path("customer/<int:customer_id>/edit/", views.edit_customer, name="edit_customer"),
+    path("customer/<int:customer_id>/delete/", views.delete_customer, name="delete_customer"),
 ]

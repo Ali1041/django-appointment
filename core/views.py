@@ -442,3 +442,63 @@ def get_blogs(request):
 def get_blog_detail(request, blog_id):
     blog = get_object_or_404(Blogs, id=blog_id)
     return JsonResponse({"blog": blog})
+
+
+@login_required
+def customer_list(request):
+    customer_list = Customer.objects.all().order_by('name')
+
+    # Number of customers per page
+    per_page = 10
+    paginator = Paginator(customer_list, per_page)
+    page = request.GET.get("page", 1)
+
+    try:
+        customers = paginator.page(page)
+    except PageNotAnInteger:
+        customers = paginator.page(1)
+    except EmptyPage:
+        customers = paginator.page(paginator.num_pages)
+
+    context = {
+        "customers": customers,
+        "total_customers": customer_list.count(),
+    }
+    return render(request, "core/customer_list.html", context)
+
+
+@admin_required
+def create_customer(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        phone = request.POST.get("phone")
+        if name:
+            Customer.objects.create(name=name, phone=phone)
+            messages.success(request, "Customer created successfully!")
+        else:
+            messages.error(request, "Customer name cannot be empty.")
+        return redirect("customer_list")
+    return render(request, "core/create_customer.html")
+
+
+@admin_required
+def edit_customer(request, customer_id):
+    customer = get_object_or_404(Customer, id=customer_id)
+    if request.method == "POST":
+        customer.name = request.POST.get("name")
+        customer.phone = request.POST.get("phone")
+        if customer.name:
+            customer.save()
+            messages.success(request, "Customer updated successfully!")
+        else:
+            messages.error(request, "Customer name cannot be empty.")
+        return redirect("customer_list")
+    return render(request, "core/edit_customer.html", {"customer": customer})
+
+
+@admin_required
+def delete_customer(request, customer_id):
+    customer = get_object_or_404(Customer, id=customer_id)
+    customer.delete()
+    messages.success(request, "Customer deleted successfully!")
+    return redirect("customer_list")
