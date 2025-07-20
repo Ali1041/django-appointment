@@ -472,8 +472,9 @@ def create_customer(request):
     if request.method == "POST":
         name = request.POST.get("name")
         phone = request.POST.get("phone")
+        note = request.POST.get("note", "")
         if name:
-            Customer.objects.create(name=name, phone=phone)
+            Customer.objects.create(name=name, phone=phone, note=note)
             messages.success(request, "Customer created successfully!")
         else:
             messages.error(request, "Customer name cannot be empty.")
@@ -487,6 +488,7 @@ def edit_customer(request, customer_id):
     if request.method == "POST":
         customer.name = request.POST.get("name")
         customer.phone = request.POST.get("phone")
+        customer.note = request.POST.get("note", "")
         if customer.name:
             customer.save()
             messages.success(request, "Customer updated successfully!")

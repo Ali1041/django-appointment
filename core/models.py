@@ -16,6 +16,8 @@ class Customer(models.Model):
     name = models.CharField(max_length=255, blank=True)
     phone = models.CharField(max_length=255, blank=True)
 
+    note = models.TextField(blank=True)
+
     def __str__(self):
         return self.name
 
